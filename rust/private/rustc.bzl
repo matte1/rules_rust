@@ -1289,12 +1289,15 @@ def rustc_compile_action(
     if rustc_output:
         action_outputs.append(rustc_output)
 
+    # Get the compilation mode for the current target.
+    compilation_mode = get_compilation_mode_opts(ctx, toolchain)
+
     # Rustc generates a pdb file (on Windows) or a dsym folder (on macos) so provide it in an output group for crate
     # types that benefit from having debug information in a separate file.
     pdb_file = None
     dsym_folder = None
     if crate_info.type in ("cdylib", "bin"):
-        if toolchain.target_os == "windows":
+        if toolchain.target_os == "windows" and compilation_mode.strip_level == "none":
             pdb_file = ctx.actions.declare_file(crate_info.output.basename[:-len(crate_info.output.extension)] + "pdb", sibling = crate_info.output)
             action_outputs.append(pdb_file)
         elif toolchain.target_os == "darwin":
